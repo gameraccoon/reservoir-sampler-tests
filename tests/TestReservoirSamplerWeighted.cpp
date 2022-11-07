@@ -2,6 +2,8 @@
 
 #include "reservoir-sampler/reservoir_sampler_weighted.h"
 
+#include "TestTypes.h"
+
 TEST(ReservoirSamplerWeighted, SamplersOfDifferentTypes_CreeateFillAndDestroy_DoNotCrash)
 {
 	{
@@ -132,6 +134,12 @@ TEST(ReservoirSamplerWeighted, SamplerOfSizeFive_ThreeElementsAdded_HasOnlyOrigi
 		std::sort(result2.begin(), result2.end());
 		EXPECT_EQ(stream, result2);
 	}
+}
+
+TEST(ReservoirSamplerWeighted, EmptySampler_Reset_DoesNotCrash)
+{
+	ReservoirSamplerWeighted<size_t> sampler(5);
+	sampler.reset();
 }
 
 TEST(ReservoirSamplerWeighted, SamplerWithAResult_Reset_CanBeReused)
@@ -298,8 +306,10 @@ TEST(ReservoirSamplerWeighted, Sampler_Moved_OldSamplerCanBeReused)
 		sampler.addElement(1.0f, value);
 	}
 
-	ReservoirSamplerWeighted<size_t> samplerMovedTo(std::move(sampler));
-	(void)samplerMovedTo;
+	{
+		ReservoirSamplerWeighted<size_t> samplerMovedTo(std::move(sampler));
+		(void)samplerMovedTo;
+	}
 
 	for (size_t value : stream2)
 	{
@@ -397,8 +407,8 @@ TEST(ReservoirSamplerWeighted, SamplerSizeOfFive_SamplingFromStreamOfTwenty_Prod
 			sampler.addElement(1, n);
 		}
 
-		ReservoirSamplerWeighted<int, int> samplerCopy(sampler);
-		ReservoirSamplerWeighted<int, int> samplerMoved(std::move(samplerCopy));
+		ReservoirSamplerWeighted<int, int, std::mt19937> samplerCopy(sampler);
+		ReservoirSamplerWeighted<int, int, std::mt19937> samplerMoved(std::move(samplerCopy));
 
 		const std::vector<int> result = samplerMoved.consumeResult();
 		for (int value : result)
@@ -463,84 +473,6 @@ TEST(ReservoirSamplerWeighted, SamplerSizeOfFive_SamplingFromStreamOfWeightedVal
 		EXPECT_NEAR(expectedFrequencies[i], frequences[i]/frequencySum, 0.01f);
 	}
 }
-
-class ImplicitCtor {
-public:
-	ImplicitCtor(int) {}
-};
-
-class Simple {
-public:
-	explicit Simple(int) {}
-};
-
-class TwoArgs {
-public:
-	TwoArgs(int, float) {}
-};
-
-class NonCopyable {
-public:
-	explicit NonCopyable(int) {}
-	NonCopyable(const NonCopyable&) = delete;
-	NonCopyable& operator=(const NonCopyable&) = delete;
-	NonCopyable(NonCopyable&&) noexcept = default;
-	NonCopyable& operator=(NonCopyable&&) noexcept = default;
-};
-
-class NonMovable {
-public:
-	explicit NonMovable(int) {}
-	NonMovable(const NonMovable&) = default;
-	NonMovable& operator=(const NonMovable&) = default;
-	NonMovable(NonMovable&&) noexcept = delete;
-	NonMovable& operator=(NonMovable&&) noexcept = delete;
-};
-
-class NonCopyableNonMovable {
-public:
-	explicit NonCopyableNonMovable(int) {}
-	NonCopyableNonMovable(const NonCopyableNonMovable&) = delete;
-	NonCopyableNonMovable& operator=(const NonCopyableNonMovable&) = delete;
-	NonCopyableNonMovable(NonCopyableNonMovable&&) noexcept = delete;
-	NonCopyableNonMovable& operator=(NonCopyableNonMovable&&) noexcept = delete;
-};
-
-class OnlyCopyConstructible {
-public:
-	explicit OnlyCopyConstructible(int) {}
-	OnlyCopyConstructible(const OnlyCopyConstructible&) = default;
-	OnlyCopyConstructible& operator=(const OnlyCopyConstructible&) = delete;
-	OnlyCopyConstructible(OnlyCopyConstructible&&) noexcept = delete;
-	OnlyCopyConstructible& operator=(OnlyCopyConstructible&&) noexcept = delete;
-};
-
-class OnlyCopyAssignable {
-public:
-	explicit OnlyCopyAssignable(int) {}
-	OnlyCopyAssignable(const OnlyCopyAssignable&) = delete;
-	OnlyCopyAssignable& operator=(const OnlyCopyAssignable&) = default;
-	OnlyCopyAssignable(OnlyCopyAssignable&&) noexcept = delete;
-	OnlyCopyAssignable& operator=(OnlyCopyAssignable&&) noexcept = delete;
-};
-
-class OnlyMoveConstructible {
-public:
-	explicit OnlyMoveConstructible(int) {}
-	OnlyMoveConstructible(const OnlyMoveConstructible&) = delete;
-	OnlyMoveConstructible& operator=(const OnlyMoveConstructible&) = delete;
-	OnlyMoveConstructible(OnlyMoveConstructible&&) noexcept = default;
-	OnlyMoveConstructible& operator=(OnlyMoveConstructible&&) noexcept = delete;
-};
-
-class OnlyMoveAssignable {
-public:
-	explicit OnlyMoveAssignable(int) {}
-	OnlyMoveAssignable(const OnlyMoveAssignable&) = delete;
-	OnlyMoveAssignable& operator=(const OnlyMoveAssignable&) = delete;
-	OnlyMoveAssignable(OnlyMoveAssignable&&) noexcept = delete;
-	OnlyMoveAssignable& operator=(OnlyMoveAssignable&&) noexcept = default;
-};
 
 TEST(ReservoirSamplerWeighted, SamplersWithDifferentTypes_ConstructedFilledCopiedAndMoved_Compiles)
 {
@@ -699,66 +631,43 @@ TEST(ReservoirSamplerWeighted, SamplersWithDifferentTypes_ConstructedFilledCopie
 	}
 }
 
-
-// this may be broken in the future as calling copy/move constructors can be omitted
-class CopyMoveCounter
-{
-public:
-	CopyMoveCounter() { ++sConstructions; }
-	CopyMoveCounter(const CopyMoveCounter&) { ++sCopiesCount; }
-	CopyMoveCounter& operator=(const CopyMoveCounter&) { ++sCopiesCount; return *this; }
-	CopyMoveCounter(CopyMoveCounter&&) noexcept { ++sMovesCount; }
-	CopyMoveCounter& operator=(CopyMoveCounter&&) noexcept { ++sMovesCount; return *this; }
-
-	static int getConstructionsCount() { return sConstructions; }
-	static int getCopiesCount() { return sCopiesCount; }
-	static int getMovesCount() { return sMovesCount; }
-
-private:
-	static int sConstructions;
-	static int sCopiesCount;
-	static int sMovesCount;
-};
-
-int CopyMoveCounter::sConstructions = 0;
-int CopyMoveCounter::sCopiesCount = 0;
-int CopyMoveCounter::sMovesCount = 0;
-
 TEST(ReservoirSamplerWeighted, Sampler_ConstructedFilledAndConsumed_ProducesReasonableAmountOfMoves)
 {
 	const size_t sampleSize = 5;
 	const size_t streamSize = 500;
 
+	CopyMoveCounter::Reset();
+
 	ReservoirSamplerWeighted<CopyMoveCounter> sampler(sampleSize);
-	EXPECT_EQ(0, CopyMoveCounter::getConstructionsCount());
-	EXPECT_EQ(0, CopyMoveCounter::getCopiesCount());
-	EXPECT_EQ(0, CopyMoveCounter::getMovesCount());
+	EXPECT_EQ(0, CopyMoveCounter::GetConstructionsCount());
+	EXPECT_EQ(0, CopyMoveCounter::GetCopiesCount());
+	EXPECT_EQ(0, CopyMoveCounter::GetMovesCount());
 
 	for (size_t n = 0; n < streamSize; ++n)
 	{
 		sampler.emplaceElement(1.0f);
 	}
 
-	const int constructionsCount = CopyMoveCounter::getConstructionsCount();
-	const int movesCount = CopyMoveCounter::getMovesCount();
+	const int constructionsCount = CopyMoveCounter::GetConstructionsCount();
+	const int movesCount = CopyMoveCounter::GetMovesCount();
 	EXPECT_GT(50, constructionsCount);
 	EXPECT_LT(static_cast<int>(sampleSize), constructionsCount);
-	EXPECT_EQ(0, CopyMoveCounter::getCopiesCount());
+	EXPECT_EQ(0, CopyMoveCounter::GetCopiesCount());
 	EXPECT_EQ(static_cast<int>(sampleSize), constructionsCount - movesCount);
 
 	auto [samples, count] = sampler.getResult();
 	(void)samples; (void)count;
 
-	EXPECT_EQ(constructionsCount, CopyMoveCounter::getConstructionsCount());
-	EXPECT_EQ(0, CopyMoveCounter::getCopiesCount());
-	EXPECT_EQ(movesCount, CopyMoveCounter::getMovesCount());
+	EXPECT_EQ(constructionsCount, CopyMoveCounter::GetConstructionsCount());
+	EXPECT_EQ(0, CopyMoveCounter::GetCopiesCount());
+	EXPECT_EQ(movesCount, CopyMoveCounter::GetMovesCount());
 
 	{
 		std::vector<CopyMoveCounter> result = sampler.consumeResult();
 		(void)result;
 	}
 
-	EXPECT_EQ(constructionsCount, CopyMoveCounter::getConstructionsCount());
-	EXPECT_EQ(0, CopyMoveCounter::getCopiesCount());
-	EXPECT_EQ(movesCount + static_cast<int>(sampleSize), CopyMoveCounter::getMovesCount());
+	EXPECT_EQ(constructionsCount, CopyMoveCounter::GetConstructionsCount());
+	EXPECT_EQ(0, CopyMoveCounter::GetCopiesCount());
+	EXPECT_EQ(movesCount + static_cast<int>(sampleSize), CopyMoveCounter::GetMovesCount());
 }
