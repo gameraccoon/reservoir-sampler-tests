@@ -312,17 +312,15 @@ TEST(ReservoirSamplerStatic, SamplerSizeOfFive_SamplingFromStreamOfTwenty_Produc
 	std::mt19937 rand{std::random_device{}()};
 	for (int i = 0; i < 10000; ++i)
 	{
-		// shift each iteration by one generated value
-		rand.discard(1);
-		ReservoirSamplerStatic<int, 5, std::mt19937> sampler(rand);
+		ReservoirSamplerStatic<int, 5, std::mt19937&> sampler(rand);
 
 		for (int n = 0; n < 20; ++n)
 		{
 			sampler.addElement(n);
 		}
 
-		ReservoirSamplerStatic<int, 5, std::mt19937> samplerCopy(sampler);
-		ReservoirSamplerStatic<int, 5, std::mt19937> samplerMoved(std::move(samplerCopy));
+		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerCopy(sampler);
+		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
 		const std::vector<int> result = samplerMoved.consumeResult();
 		for (int value : result)

@@ -381,17 +381,15 @@ TEST(ReservoirSamplerWeightedStatic, SamplerSizeOfFive_SamplingFromStreamOfTwent
 	std::mt19937 rand{std::random_device{}()};
 	for (int i = 0; i < 10000; ++i)
 	{
-		// shift each iteration by one generated value
-		rand.discard(1);
-		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937> sampler(rand);
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> sampler(rand);
 
 		for (int n = 0; n < 20; ++n)
 		{
 			sampler.addElement(1, n);
 		}
 
-		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937> samplerCopy(sampler);
-		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937> samplerMoved(std::move(samplerCopy));
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerCopy(sampler);
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
 		const std::vector<int> result = samplerMoved.consumeResult();
 		for (int value : result)
@@ -431,17 +429,15 @@ TEST(ReservoirSamplerWeightedStatic, SamplerSizeOfFive_SamplingFromStreamOfWeigh
 	std::mt19937 rand{std::random_device{}()};
 	for (int i = 0; i < 100000; ++i)
 	{
-		// shift each iteration by one generated value
-		rand.discard(1);
-		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937> sampler(rand);
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> sampler(rand);
 
 		for (size_t i = 0; i < elementsCount; ++i)
 		{
 			sampler.addElement(weights[i], i);
 		}
 
-		ReservoirSamplerWeightedStatic<int, 5, int> samplerCopy(sampler);
-		ReservoirSamplerWeightedStatic<int, 5, int> samplerMoved(std::move(samplerCopy));
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerCopy(sampler);
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
 		const std::vector<int> result = samplerMoved.consumeResult();
 		for (int value : result)
