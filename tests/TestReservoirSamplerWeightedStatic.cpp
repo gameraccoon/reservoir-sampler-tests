@@ -199,30 +199,6 @@ TEST(ReservoirSamplerWeightedStatic, SamplerWithAResult_Consume_CanBeReused)
 	}
 }
 
-TEST(ReservoirSamplerWeightedStatic, Sampler_AddDummyWhenNotConsidered_ProducesExpectedResult)
-{
-	const std::vector<size_t> stream({10, 11, 12, 13, 14});
-
-	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
-
-	for (const size_t value : stream)
-	{
-		const float weight = 1.0f;
-		if (sampler.willNextBeConsidered(weight))
-		{
-			sampler.addElement(weight, value);
-		}
-		else
-		{
-			sampler.addDummyElement(weight);
-		}
-	}
-
-	std::vector<size_t> result = sampler.consumeResult();
-	std::sort(result.begin(), result.end());
-	EXPECT_EQ(result, stream);
-}
-
 TEST(ReservoirSamplerWeightedStatic, EmptySampler_Copied_DoesNotCrash)
 {
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
@@ -389,6 +365,45 @@ TEST(ReservoirSamplerWeightedStatic, SamplerSizeOfFive_SamplingFromStreamOfTwent
 		for (int n = 0; n < 20; ++n)
 		{
 			sampler.addElement(1, n);
+		}
+
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerCopy(sampler);
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
+
+		const std::vector<int> result = samplerMoved.consumeResult();
+		for (int value : result)
+		{
+			++frequences[value];
+		}
+	}
+
+	const float frequencySum = std::accumulate(frequences.begin(), frequences.end(), 0.0f);
+	ASSERT_EQ(5.0f * 10000, frequencySum);
+	for (const int freq : frequences)
+	{
+		EXPECT_NEAR(0.05f, freq/frequencySum, 0.01f);
+	}
+}
+
+TEST(ReservoirSamplerWeightedStatic, Sampler_AddingWhenWillBeConsidered_ProducesEqualFrequencies)
+{
+	std::array<int, 20> frequences{};
+	// reuse random to speed things up a bit
+	std::mt19937 rand{std::random_device{}()};
+	for (int i = 0; i < 10000; ++i)
+	{
+		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> sampler(rand);
+
+		for (int n = 0; n < 20; ++n)
+		{
+			if (sampler.willNextBeConsidered(1))
+			{
+				sampler.addElement(1, n);
+			}
+			else
+			{
+				sampler.addDummyElement(1);
+			}
 		}
 
 		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerCopy(sampler);

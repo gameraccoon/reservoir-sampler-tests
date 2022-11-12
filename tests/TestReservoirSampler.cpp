@@ -199,29 +199,6 @@ TEST(ReservoirSampler, SamplerWithAResult_Consume_CanBeReused)
 	}
 }
 
-TEST(ReservoirSampler, Sampler_AddDummyWhenNotConsidered_ProducesExpectedResult)
-{
-	const std::vector<size_t> stream({10, 11, 12, 13, 14});
-
-	ReservoirSampler<size_t> sampler(5);
-
-	for (const size_t value : stream)
-	{
-		if (sampler.willNextBeConsidered())
-		{
-			sampler.addElement(value);
-		}
-		else
-		{
-			sampler.addDummyElement();
-		}
-	}
-
-	std::vector<size_t> result = sampler.consumeResult();
-	std::sort(result.begin(), result.end());
-	EXPECT_EQ(result, stream);
-}
-
 TEST(ReservoirSampler, Sampler_PreallocateData_ProducesExpectedResult)
 {
 	const std::vector<size_t> stream({10, 11, 12, 13, 14});
@@ -337,6 +314,79 @@ TEST(ReservoirSampler, SamplerSizeOfFive_SamplingFromStreamOfTwenty_ProducesEqua
 		for (int n = 0; n < 20; ++n)
 		{
 			sampler.addElement(n);
+		}
+
+		ReservoirSampler<int, std::mt19937&> samplerCopy(sampler);
+		ReservoirSampler<int, std::mt19937&> samplerMoved(std::move(samplerCopy));
+
+		const std::vector<int> result = samplerMoved.consumeResult();
+		for (const int value : result)
+		{
+			++frequences[value];
+		}
+	}
+
+	const float frequencySum = std::accumulate(frequences.begin(), frequences.end(), 0.0f);
+	ASSERT_EQ(5.0f * 10000, frequencySum);
+	for (int freq : frequences)
+	{
+		EXPECT_NEAR(0.05f, freq/frequencySum, 0.01f);
+	}
+}
+
+TEST(ReservoirSampler, Sampler_AddingWhenWillBeConsidered_ProducesEqualFrequencies)
+{
+	std::array<int, 20> frequences{};
+	// reuse random to speed things up a bit
+	std::mt19937 rand{std::random_device{}()};
+	for (int i = 0; i < 10000; ++i)
+	{
+		ReservoirSampler<int, std::mt19937&> sampler(5, rand);
+
+		for (int n = 0; n < 20; ++n)
+		{
+			if (sampler.willNextBeConsidered())
+			{
+				sampler.addElement(n);
+			}
+			else
+			{
+				sampler.addDummyElement();
+			}
+		}
+
+		ReservoirSampler<int, std::mt19937&> samplerCopy(sampler);
+		ReservoirSampler<int, std::mt19937&> samplerMoved(std::move(samplerCopy));
+
+		const std::vector<int> result = samplerMoved.consumeResult();
+		for (const int value : result)
+		{
+			++frequences[value];
+		}
+	}
+
+	const float frequencySum = std::accumulate(frequences.begin(), frequences.end(), 0.0f);
+	ASSERT_EQ(5.0f * 10000, frequencySum);
+	for (int freq : frequences)
+	{
+		EXPECT_NEAR(0.05f, freq/frequencySum, 0.01f);
+	}
+}
+
+TEST(ReservoirSampler, Sampler_JumpAheadWhenAdding_ProducesEqualFrequencies)
+{
+	std::array<int, 20> frequences{};
+	// reuse random to speed things up a bit
+	std::mt19937 rand{std::random_device{}()};
+	for (int i = 0; i < 10000; ++i)
+	{
+		ReservoirSampler<int, std::mt19937&> sampler(5, rand);
+
+		for (int n = 0; n < 20; ++n)
+		{
+			sampler.addElement(n);
+			n += static_cast<int>(sampler.getNextElementsSkippedNumber());
+			sampler.jumpAhead(sampler.getNextElementsSkippedNumber());
 		}
 
 		ReservoirSampler<int, std::mt19937&> samplerCopy(sampler);
