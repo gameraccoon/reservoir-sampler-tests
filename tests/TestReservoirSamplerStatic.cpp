@@ -302,10 +302,10 @@ TEST(ReservoirSamplerStatic, SamplerSizeOfFive_SamplingFromStreamOfTwenty_Produc
 		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerCopy(sampler);
 		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
-		const std::vector<int> result = samplerMoved.consumeResult();
-		for (const int value : result)
+		const auto [data, size] = samplerMoved.getResult();
+		for (size_t k = 0; k < size; ++k)
 		{
-			++frequences[value];
+			++frequences[data[k]];
 		}
 	}
 
@@ -341,10 +341,10 @@ TEST(ReservoirSamplerStatic, Sampler_AddingWhenWillBeConsidered_ProducesEqualFre
 		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerCopy(sampler);
 		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
-		const std::vector<int> result = samplerMoved.consumeResult();
-		for (const int value : result)
+		const auto [data, size] = samplerMoved.getResult();
+		for (size_t k = 0; k < size; ++k)
 		{
-			++frequences[value];
+			++frequences[data[k]];
 		}
 	}
 
@@ -375,10 +375,10 @@ TEST(ReservoirSamplerStatic, Sampler_JumpAheadWhenAdding_ProducesEqualFrequencie
 		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerCopy(sampler);
 		ReservoirSamplerStatic<int, 5, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
-		const std::vector<int> result = samplerMoved.consumeResult();
-		for (const int value : result)
+		const auto [data, size] = samplerMoved.getResult();
+		for (size_t k = 0; k < size; ++k)
 		{
-			++frequences[value];
+			++frequences[data[k]];
 		}
 	}
 

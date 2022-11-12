@@ -387,10 +387,10 @@ TEST(ReservoirSamplerWeighted, SamplerSizeOfFive_SamplingFromStreamOfTwenty_Prod
 		ReservoirSamplerWeighted<int, int, std::mt19937&> samplerCopy(sampler);
 		ReservoirSamplerWeighted<int, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
-		const std::vector<int> result = samplerMoved.consumeResult();
-		for (const int value : result)
+		const auto [data, size] = samplerMoved.getResult();
+		for (size_t k = 0; k < size; ++k)
 		{
-			++frequences[value];
+			++frequences[data[k]];
 		}
 	}
 
@@ -426,10 +426,10 @@ TEST(ReservoirSamplerWeighted, Sampler_AddingWhenWillBeConsidered_ProducesEqualF
 		ReservoirSamplerWeighted<int, int, std::mt19937&> samplerCopy(sampler);
 		ReservoirSamplerWeighted<int, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
-		const std::vector<int> result = samplerMoved.consumeResult();
-		for (const int value : result)
+		const auto [data, size] = samplerMoved.getResult();
+		for (size_t k = 0; k < size; ++k)
 		{
-			++frequences[value];
+			++frequences[data[k]];
 		}
 	}
 
@@ -474,10 +474,10 @@ TEST(ReservoirSamplerWeighted, SamplerSizeOfFive_SamplingFromStreamOfWeightedVal
 		ReservoirSamplerWeighted<size_t, int, std::mt19937&> samplerCopy(sampler);
 		ReservoirSamplerWeighted<size_t, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
-		const std::vector<size_t> result = samplerMoved.consumeResult();
-		for (const size_t value : result)
+		const auto [data, size] = samplerMoved.getResult();
+		for (size_t k = 0; k < size; ++k)
 		{
-			++frequences[value];
+			++frequences[data[k]];
 		}
 	}
 
