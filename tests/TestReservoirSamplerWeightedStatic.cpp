@@ -2,6 +2,9 @@
 
 #include "reservoir-sampler/reservoir_sampler_weighted_static.h"
 
+#include <array>
+#include <numeric>
+
 #include "TestTypes.h"
 
 TEST(ReservoirSamplerWeightedStatic, SamplersOfDifferentTypes_CreeateFillAndDestroy_DoNotCrash)
@@ -83,7 +86,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_FiveElementsAdded_HasOnly
 	const std::vector<size_t> stream({10, 11, 12, 13, 14});
 
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -112,7 +115,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_ThreeElementsAdded_HasOnl
 	const std::vector<size_t> stream({10, 11, 12});
 
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -148,14 +151,14 @@ TEST(ReservoirSamplerWeightedStatic, SamplerWithAResult_Reset_CanBeReused)
 	const std::vector<size_t> stream1({10, 11, 12, 13, 14});
 	const std::vector<size_t> stream2({15, 16, 17, 18, 19});
 
-	for (size_t value : stream1)
+	for (const size_t value : stream1)
 	{
 		sampler.addElement(1.0f, value);
 	}
 
 	sampler.reset();
 
-	for (size_t value : stream2)
+	for (const size_t value : stream2)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -173,7 +176,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerWithAResult_Consume_CanBeReused)
 	const std::vector<size_t> stream1({10, 11, 12, 13, 14});
 	const std::vector<size_t> stream2({15, 16, 17, 18, 19});
 
-	for (size_t value : stream1)
+	for (const size_t value : stream1)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -184,7 +187,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerWithAResult_Consume_CanBeReused)
 		ASSERT_EQ(result, stream1);
 	}
 
-	for (size_t value : stream2)
+	for (const size_t value : stream2)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -202,7 +205,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_AddDummyWhenNotConsidered_ProducesE
 
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
 
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		const float weight = 1.0f;
 		if (sampler.willNextBeConsidered(weight))
@@ -232,7 +235,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Copied_HoldsTheData)
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
 	const std::vector<size_t> stream({10, 11, 12, 13, 14});
 
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -264,7 +267,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Moved_ValueIsMoved)
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
 	const std::vector<size_t> stream({10, 11, 12, 13, 14});
 
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -284,7 +287,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Moved_OldSamplerCanBeReused)
 	const std::vector<size_t> stream1({10, 11, 12, 13, 14});
 	const std::vector<size_t> stream2({15, 16, 17, 18, 19});
 
-	for (size_t value : stream1)
+	for (const size_t value : stream1)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -294,7 +297,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Moved_OldSamplerCanBeReused)
 		(void)samplerMovedTo;
 	}
 
-	for (size_t value : stream2)
+	for (const size_t value : stream2)
 	{
 		sampler.addElement(1.0f, value);
 	}
@@ -400,7 +403,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerSizeOfFive_SamplingFromStreamOfTwent
 
 	const float frequencySum = std::accumulate(frequences.begin(), frequences.end(), 0.0f);
 	ASSERT_EQ(5.0f * 10000, frequencySum);
-	for (int freq : frequences)
+	for (const int freq : frequences)
 	{
 		EXPECT_NEAR(0.05f, freq/frequencySum, 0.01f);
 	}
@@ -429,18 +432,18 @@ TEST(ReservoirSamplerWeightedStatic, SamplerSizeOfFive_SamplingFromStreamOfWeigh
 	std::mt19937 rand{std::random_device{}()};
 	for (int i = 0; i < 100000; ++i)
 	{
-		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> sampler(rand);
+		ReservoirSamplerWeightedStatic<size_t, 5, int, std::mt19937&> sampler(rand);
 
-		for (size_t i = 0; i < elementsCount; ++i)
+		for (size_t n = 0; n < elementsCount; ++n)
 		{
-			sampler.addElement(weights[i], i);
+			sampler.addElement(weights[n], n);
 		}
 
-		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerCopy(sampler);
-		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
+		ReservoirSamplerWeightedStatic<size_t, 5, int, std::mt19937&> samplerCopy(sampler);
+		ReservoirSamplerWeightedStatic<size_t, 5, int, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
-		const std::vector<int> result = samplerMoved.consumeResult();
-		for (int value : result)
+		const std::vector<size_t> result = samplerMoved.consumeResult();
+		for (const size_t value : result)
 		{
 			++frequences[value];
 		}

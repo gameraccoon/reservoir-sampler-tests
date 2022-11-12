@@ -2,6 +2,9 @@
 
 #include "reservoir-sampler/reservoir_sampler.h"
 
+#include <array>
+#include <numeric>
+
 #include "TestTypes.h"
 
 TEST(ReservoirSampler, SamplersOfDifferentTypes_CreeateFillAndDestroy_DoNotCrash)
@@ -83,7 +86,7 @@ TEST(ReservoirSampler, SamplerOfSizeFive_FiveElementsAdded_HasOnlyOriginalElemen
 	const std::vector<size_t> stream({10, 11, 12, 13, 14});
 
 	ReservoirSampler<size_t> sampler(5);
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(value);
 	}
@@ -112,7 +115,7 @@ TEST(ReservoirSampler, SamplerOfSizeFive_ThreeElementsAdded_HasOnlyOriginalEleme
 	const std::vector<size_t> stream({10, 11, 12});
 
 	ReservoirSampler<size_t> sampler(5);
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(value);
 	}
@@ -148,14 +151,14 @@ TEST(ReservoirSampler, SamplerWithAResult_Reset_CanBeReused)
 	const std::vector<size_t> stream1({10, 11, 12, 13, 14});
 	const std::vector<size_t> stream2({15, 16, 17, 18, 19});
 
-	for (size_t value : stream1)
+	for (const size_t value : stream1)
 	{
 		sampler.addElement(value);
 	}
 
 	sampler.reset();
 
-	for (size_t value : stream2)
+	for (const size_t value : stream2)
 	{
 		sampler.addElement(value);
 	}
@@ -173,7 +176,7 @@ TEST(ReservoirSampler, SamplerWithAResult_Consume_CanBeReused)
 	const std::vector<size_t> stream1({10, 11, 12, 13, 14});
 	const std::vector<size_t> stream2({15, 16, 17, 18, 19});
 
-	for (size_t value : stream1)
+	for (const size_t value : stream1)
 	{
 		sampler.addElement(value);
 	}
@@ -184,7 +187,7 @@ TEST(ReservoirSampler, SamplerWithAResult_Consume_CanBeReused)
 		ASSERT_EQ(result, stream1);
 	}
 
-	for (size_t value : stream2)
+	for (const size_t value : stream2)
 	{
 		sampler.addElement(value);
 	}
@@ -202,7 +205,7 @@ TEST(ReservoirSampler, Sampler_AddDummyWhenNotConsidered_ProducesExpectedResult)
 
 	ReservoirSampler<size_t> sampler(5);
 
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		if (sampler.willNextBeConsidered())
 		{
@@ -226,7 +229,7 @@ TEST(ReservoirSampler, Sampler_PreallocateData_ProducesExpectedResult)
 	ReservoirSampler<size_t> sampler(5);
 	sampler.allocateData();
 
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(value);
 	}
@@ -248,7 +251,7 @@ TEST(ReservoirSampler, Sampler_Copied_HoldsTheData)
 	ReservoirSampler<size_t> sampler(5);
 	const std::vector<size_t> stream({10, 11, 12, 13, 14});
 
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(value);
 	}
@@ -280,7 +283,7 @@ TEST(ReservoirSampler, Sampler_Moved_ValueIsMoved)
 	ReservoirSampler<size_t> sampler(5);
 	const std::vector<size_t> stream({10, 11, 12, 13, 14});
 
-	for (size_t value : stream)
+	for (const size_t value : stream)
 	{
 		sampler.addElement(value);
 	}
@@ -300,7 +303,7 @@ TEST(ReservoirSampler, Sampler_Moved_OldSamplerCanBeReused)
 	const std::vector<size_t> stream1({10, 11, 12, 13, 14});
 	const std::vector<size_t> stream2({15, 16, 17, 18, 19});
 
-	for (size_t value : stream1)
+	for (const size_t value : stream1)
 	{
 		sampler.addElement(value);
 	}
@@ -310,7 +313,7 @@ TEST(ReservoirSampler, Sampler_Moved_OldSamplerCanBeReused)
 		(void)samplerMovedTo;
 	}
 
-	for (size_t value : stream2)
+	for (const size_t value : stream2)
 	{
 		sampler.addElement(value);
 	}
@@ -340,7 +343,7 @@ TEST(ReservoirSampler, SamplerSizeOfFive_SamplingFromStreamOfTwenty_ProducesEqua
 		ReservoirSampler<int, std::mt19937&> samplerMoved(std::move(samplerCopy));
 
 		const std::vector<int> result = samplerMoved.consumeResult();
-		for (int value : result)
+		for (const int value : result)
 		{
 			++frequences[value];
 		}
