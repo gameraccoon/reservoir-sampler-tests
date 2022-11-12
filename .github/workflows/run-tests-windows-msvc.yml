@@ -1,0 +1,41 @@
+name: Windows MSVC - build and run unit tests
+
+on: [push, pull_request]
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release]
+    env:
+      BUILD_TYPE: ${{matrix.build_type}}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Reconfigure git to use HTTP authentication
+      run: >
+        git config --global url."https://github.com/".insteadOf
+        git@github.com:
+
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+
+    - name: Generate project
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake build .. -G "Visual Studio 17 2022"
+
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build . --config $BUILD_TYPE
+
+    - name: Run unit tests
+      working-directory: ${{github.workspace}}
+      run: ./build/Release/reservoir-sampler-tests.exe
