@@ -33,10 +33,12 @@ endif()
 # Executable
 set(UNITTESTS_NAME ${APP_NAME})
 file(GLOB UNITTESTS_SRC RELATIVE "" FOLLOW_SYMLINKS "${TESTS_BASE_DIR}/tests/*.cpp")
+file(GLOB RESERVOIR_SAMPLER_SRC RELATIVE "" FOLLOW_SYMLINKS "${TESTS_BASE_DIR}/reservoir-sampler/*")
 set(APP_SRC
 	${UNITTESTS_SRC}
 	${TESTS_BASE_DIR}/googletest/googletest/src/gtest-all.cc
 	${TESTS_BASE_DIR}/main.cpp
+	${RESERVOIR_SAMPLER_SRC}
 )
 
 include_directories(

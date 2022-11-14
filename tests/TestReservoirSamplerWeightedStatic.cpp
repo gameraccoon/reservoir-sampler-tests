@@ -11,38 +11,38 @@ TEST(ReservoirSamplerWeightedStatic, SamplersOfDifferentTypes_CreeateFillAndDest
 {
 	{
 		ReservoirSamplerWeightedStatic<std::string, 5> sampler;
-		sampler.addElement(1.0f, "list");
-		sampler.addElement(1.0f, "of");
-		sampler.addElement(1.0f, "test");
-		sampler.addElement(1.0f, "string");
-		sampler.addElement(1.0f, "items");
+		sampler.sampleElement(1.0f, "list");
+		sampler.sampleElement(1.0f, "of");
+		sampler.sampleElement(1.0f, "test");
+		sampler.sampleElement(1.0f, "string");
+		sampler.sampleElement(1.0f, "items");
 	}
 
 	{
 		ReservoirSamplerWeightedStatic<size_t, 5> sampler;
-		sampler.addElement(1.0f, 0);
-		sampler.addElement(1.0f, 1);
-		sampler.addElement(1.0f, 2);
-		sampler.addElement(1.0f, 3);
-		sampler.addElement(1.0f, 4);
+		sampler.sampleElement(1.0f, 0);
+		sampler.sampleElement(1.0f, 1);
+		sampler.sampleElement(1.0f, 2);
+		sampler.sampleElement(1.0f, 3);
+		sampler.sampleElement(1.0f, 4);
 	}
 
 	{
 		ReservoirSamplerWeightedStatic<std::vector<int>, 5> sampler;
-		sampler.addElement(1.0f, std::vector<int>{{1, 2}});
-		sampler.addElement(1.0f, std::vector<int>{{3, 4}});
-		sampler.addElement(1.0f, std::vector<int>{{5, 6}});
-		sampler.addElement(1.0f, std::vector<int>{{7, 8}});
-		sampler.addElement(1.0f, std::vector<int>{{9, 10}});
+		sampler.sampleElement(1.0f, std::vector<int>{{1, 2}});
+		sampler.sampleElement(1.0f, std::vector<int>{{3, 4}});
+		sampler.sampleElement(1.0f, std::vector<int>{{5, 6}});
+		sampler.sampleElement(1.0f, std::vector<int>{{7, 8}});
+		sampler.sampleElement(1.0f, std::vector<int>{{9, 10}});
 	}
 
 	{
 		ReservoirSamplerWeightedStatic<std::thread, 5> sampler;
-		sampler.emplaceElement(1.0f);
-		sampler.emplaceElement(1.0f);
-		sampler.emplaceElement(1.0f);
-		sampler.emplaceElement(1.0f);
-		sampler.emplaceElement(1.0f);
+		sampler.sampleElementEmplace(1.0f);
+		sampler.sampleElementEmplace(1.0f);
+		sampler.sampleElementEmplace(1.0f);
+		sampler.sampleElementEmplace(1.0f);
+		sampler.sampleElementEmplace(1.0f);
 	}
 }
 
@@ -50,29 +50,29 @@ TEST(ReservoirSamplerWeightedStatic, SamplersOfDifferentSizes_CreeateFillAndDest
 {
 	{
 		ReservoirSamplerWeightedStatic<size_t, 5> sampler;
-		sampler.addElement(1.0f, 0);
-		sampler.addElement(1.0f, 1);
-		sampler.addElement(1.0f, 2);
-		sampler.addElement(1.0f, 3);
-		sampler.addElement(1.0f, 4);
+		sampler.sampleElement(1.0f, 0);
+		sampler.sampleElement(1.0f, 1);
+		sampler.sampleElement(1.0f, 2);
+		sampler.sampleElement(1.0f, 3);
+		sampler.sampleElement(1.0f, 4);
 	}
 
 	{
 		ReservoirSamplerWeightedStatic<size_t, 1> sampler;
-		sampler.addElement(1.0f, 0);
-		sampler.addElement(1.0f, 1);
-		sampler.addElement(1.0f, 2);
-		sampler.addElement(1.0f, 3);
-		sampler.addElement(1.0f, 4);
+		sampler.sampleElement(1.0f, 0);
+		sampler.sampleElement(1.0f, 1);
+		sampler.sampleElement(1.0f, 2);
+		sampler.sampleElement(1.0f, 3);
+		sampler.sampleElement(1.0f, 4);
 	}
 
 	{
 		ReservoirSamplerWeightedStatic<size_t, 300> sampler;
-		sampler.addElement(1.0f, 0);
-		sampler.addElement(1.0f, 1);
-		sampler.addElement(1.0f, 2);
-		sampler.addElement(1.0f, 3);
-		sampler.addElement(1.0f, 4);
+		sampler.sampleElement(1.0f, 0);
+		sampler.sampleElement(1.0f, 1);
+		sampler.sampleElement(1.0f, 2);
+		sampler.sampleElement(1.0f, 3);
+		sampler.sampleElement(1.0f, 4);
 	}
 
 	{
@@ -88,25 +88,47 @@ TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_FiveElementsAdded_HasOnly
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
 	for (const size_t value : stream)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	{
-		std::vector<size_t> result1;
-		result1.reserve(stream.size());
-		const auto [data, size] = sampler.getResult();
-		for (size_t i = 0; i < size; ++i)
+		// we can use range-based loop to iterate over the resulting data
+		std::vector<size_t> result;
+		result.reserve(stream.size());
+		for (size_t item : sampler.getResult())
 		{
-			result1.push_back(data[i]);
+			result.push_back(item);
 		}
-		std::sort(result1.begin(), result1.end());
-		EXPECT_EQ(stream, result1);
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(stream, result);
 	}
 
 	{
-		std::vector<size_t> result2 = sampler.consumeResult();
-		std::sort(result2.begin(), result2.end());
-		EXPECT_EQ(stream, result2);
+		// we can get raw pointer and size to iterate over them as C-array
+		const auto [data, size] = sampler.getResult();
+		std::vector<size_t> result;
+		result.reserve(size);
+		for (size_t	i = 0; i < size; ++i)
+		{
+			result.push_back(data[i]);
+		}
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(stream, result);
+	}
+
+	{
+		// we can construct a vector from the C-array by copying the data into it
+		const auto [data, size] = sampler.getResult();
+		std::vector<size_t> result(data, data + size);
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(stream, result);
+	}
+
+	{
+		// we can move data into a new vector
+		std::vector<size_t> result = sampler.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(stream, result);
 	}
 }
 
@@ -117,7 +139,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_ThreeElementsAdded_HasOnl
 	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
 	for (const size_t value : stream)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	{
@@ -153,14 +175,14 @@ TEST(ReservoirSamplerWeightedStatic, SamplerWithAResult_Reset_CanBeReused)
 
 	for (const size_t value : stream1)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	sampler.reset();
 
 	for (const size_t value : stream2)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	{
@@ -178,7 +200,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerWithAResult_Consume_CanBeReused)
 
 	for (const size_t value : stream1)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	{
@@ -189,7 +211,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerWithAResult_Consume_CanBeReused)
 
 	for (const size_t value : stream2)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	{
@@ -213,7 +235,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Copied_HoldsTheData)
 
 	for (const size_t value : stream)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	ReservoirSamplerWeightedStatic<size_t, 5> samplerCopy(sampler);
@@ -245,7 +267,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Moved_ValueIsMoved)
 
 	for (const size_t value : stream)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	ReservoirSamplerWeightedStatic<size_t, 5> samplerMovedTo(std::move(sampler));
@@ -265,7 +287,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Moved_OldSamplerCanBeReused)
 
 	for (const size_t value : stream1)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	{
@@ -275,7 +297,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Moved_OldSamplerCanBeReused)
 
 	for (const size_t value : stream2)
 	{
-		sampler.addElement(1.0f, value);
+		sampler.sampleElement(1.0f, value);
 	}
 
 	{
@@ -292,7 +314,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentWeightTypes_FilledWith
 		for (int i = 0; i < 100; ++i)
 		{
 			const float weight = (i >= 5 && i < 10) ? 1.0f : 0.0f;
-			sampler.addElement(weight, i);
+			sampler.sampleElement(weight, i);
 		}
 
 		std::vector<int> result = sampler.consumeResult();
@@ -305,7 +327,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentWeightTypes_FilledWith
 		for (int i = 0; i < 100; ++i)
 		{
 			const double weight = (i >= 5 && i < 10) ? 1.0 : 0.0;
-			sampler.addElement(weight, i);
+			sampler.sampleElement(weight, i);
 		}
 
 		std::vector<int> result = sampler.consumeResult();
@@ -318,7 +340,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentWeightTypes_FilledWith
 		for (int i = 0; i < 100; ++i)
 		{
 			const int weight = (i >= 5 && i < 10) ? 1 : 0;
-			sampler.addElement(weight, i);
+			sampler.sampleElement(weight, i);
 		}
 
 		std::vector<int> result = sampler.consumeResult();
@@ -331,7 +353,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentWeightTypes_FilledWith
 		for (int i = 0; i < 100; ++i)
 		{
 			const char weight = (i >= 5 && i < 10) ? 1 : 0;
-			sampler.addElement(weight, i);
+			sampler.sampleElement(weight, i);
 		}
 
 		std::vector<int> result = sampler.consumeResult();
@@ -344,7 +366,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentWeightTypes_FilledWith
 		for (int i = 0; i < 100; ++i)
 		{
 			const bool weight = (i >= 5 && i < 10);
-			sampler.addElement(weight, i);
+			sampler.sampleElement(weight, i);
 		}
 
 		std::vector<int> result = sampler.consumeResult();
@@ -364,7 +386,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerSizeOfFive_SamplingFromStreamOfTwent
 
 		for (int n = 0; n < 20; ++n)
 		{
-			sampler.addElement(1, n);
+			sampler.sampleElement(1, n);
 		}
 
 		ReservoirSamplerWeightedStatic<int, 5, int, std::mt19937&> samplerCopy(sampler);
@@ -396,13 +418,13 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_AddingWhenWillBeConsidered_Produces
 
 		for (int n = 0; n < 20; ++n)
 		{
-			if (sampler.willNextBeConsidered(1))
+			if (sampler.willNextElementBeConsidered(1))
 			{
-				sampler.addElement(1, n);
+				sampler.sampleElement(1, n);
 			}
 			else
 			{
-				sampler.addDummyElement(1);
+				sampler.skipNextElement(1);
 			}
 		}
 
@@ -451,7 +473,7 @@ TEST(ReservoirSamplerWeightedStatic, SamplerSizeOfFive_SamplingFromStreamOfWeigh
 
 		for (size_t n = 0; n < elementsCount; ++n)
 		{
-			sampler.addElement(weights[n], n);
+			sampler.sampleElement(weights[n], n);
 		}
 
 		ReservoirSamplerWeightedStatic<size_t, 5, int, std::mt19937&> samplerCopy(sampler);
@@ -475,9 +497,9 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 {
 	{
 		ReservoirSamplerWeightedStatic<int, 2, int> sampler;
-		sampler.addElement(2, 10);
-		sampler.emplaceElement(1, 20);
-		sampler.addElement(3, 40);
+		sampler.sampleElement(2, 10);
+		sampler.sampleElementEmplace(1, 20);
+		sampler.sampleElement(3, 40);
 
 		ReservoirSamplerWeightedStatic<int, 2, int> samplerCopy(sampler);
 		(void)samplerCopy;
@@ -487,9 +509,9 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 
 	{
 		ReservoirSamplerWeightedStatic<std::string, 2, int> sampler;
-		sampler.addElement(2, "test");
-		sampler.emplaceElement(1, "test2");
-		sampler.addElement(3, "test3");
+		sampler.sampleElement(2, "test");
+		sampler.sampleElementEmplace(1, "test2");
+		sampler.sampleElement(3, "test3");
 
 		ReservoirSamplerWeightedStatic<std::string, 2, int> samplerCopy(sampler);
 		(void)samplerCopy;
@@ -500,10 +522,10 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<ImplicitCtor, 2> sampler;
 		ImplicitCtor v(2);
-		sampler.addElement(4, v);
-		sampler.addElement(2, ImplicitCtor(2));
-		sampler.emplaceElement(1, 2);
-		sampler.addElement(3, 2);
+		sampler.sampleElement(4, v);
+		sampler.sampleElement(2, ImplicitCtor(2));
+		sampler.sampleElementEmplace(1, 2);
+		sampler.sampleElement(3, 2);
 
 		ReservoirSamplerWeightedStatic<ImplicitCtor, 2> samplerCopy(sampler);
 		(void)samplerCopy;
@@ -514,10 +536,10 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<Simple, 2> sampler;
 		Simple v(2);
-		sampler.addElement(4, v);
-		sampler.addElement(2, Simple(2));
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		sampler.sampleElement(4, v);
+		sampler.sampleElement(2, Simple(2));
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 
 		ReservoirSamplerWeightedStatic<Simple, 2> samplerCopy(sampler);
 		(void)samplerCopy;
@@ -528,10 +550,10 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<TwoArgs, 2> sampler;
 		TwoArgs v(2, 5.5f);
-		sampler.addElement(4, v);
-		sampler.addElement(2, TwoArgs(2, 9.0f));
-		sampler.emplaceElement(1, 2, 3.5f);
-		//sampler.addElement(3, 2); // won't compile, no matching constructor
+		sampler.sampleElement(4, v);
+		sampler.sampleElement(2, TwoArgs(2, 9.0f));
+		sampler.sampleElementEmplace(1, 2, 3.5f);
+		//sampler.sampleElement(3, 2); // won't compile, no matching constructor
 
 		ReservoirSamplerWeightedStatic<TwoArgs, 2> samplerCopy(sampler);
 		(void)samplerCopy;
@@ -542,10 +564,10 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<NonCopyable, 2> sampler;
 		//NonCopyable v(2);
-		//sampler.addElement(4, v);	// won't compile, no copy constructor
-		sampler.addElement(2, NonCopyable(2));
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		//sampler.sampleElement(4, v);	// won't compile, no copy constructor
+		sampler.sampleElement(2, NonCopyable(2));
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 
 		ReservoirSamplerWeightedStatic<NonCopyable, 2> samplerMovedTo(std::move(sampler));
 		(void)samplerMovedTo;
@@ -554,10 +576,10 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<NonMovable, 2> sampler;
 		NonMovable v(2);
-		sampler.addElement(4, v);
-		sampler.addElement(2, NonMovable(2));
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		sampler.sampleElement(4, v);
+		sampler.sampleElement(2, NonMovable(2));
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 
 		ReservoirSamplerWeightedStatic<NonMovable, 2> samplerCopy(sampler);
 		(void)samplerCopy;
@@ -566,19 +588,19 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<NonCopyableNonMovable, 2> sampler;
 		//NonCopyableNonMovable v(2);
-		//sampler.addElement(4, v); // won't compile, no copy constructor
-		//sampler.addElement(2, NonCopyableNonMovable(2)); // won't compile, should be copy or move constructible
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		//sampler.sampleElement(4, v); // won't compile, no copy constructor
+		//sampler.sampleElement(2, NonCopyableNonMovable(2)); // won't compile, should be copy or move constructible
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 	}
 
 	{
 		ReservoirSamplerWeightedStatic<OnlyCopyConstructible, 2> sampler;
 		OnlyCopyConstructible v(2);
-		sampler.addElement(4, v);
-		sampler.addElement(2, OnlyCopyConstructible(2));
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		sampler.sampleElement(4, v);
+		sampler.sampleElement(2, OnlyCopyConstructible(2));
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 
 		ReservoirSamplerWeightedStatic<OnlyCopyConstructible, 2> samplerCopy(sampler);
 		(void)samplerCopy;
@@ -587,19 +609,19 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<OnlyCopyAssignable, 2> sampler;
 		//OnlyCopyAssignable v(2);
-		//sampler.addElement(4, v); // won't compile, no copy constructor
-		//sampler.addElement(2, OnlyCopyAssignable(2)); // won't compile, should be copy or move constructible
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		//sampler.sampleElement(4, v); // won't compile, no copy constructor
+		//sampler.sampleElement(2, OnlyCopyAssignable(2)); // won't compile, should be copy or move constructible
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 	}
 
 	{
 		ReservoirSamplerWeightedStatic<OnlyMoveConstructible, 2> sampler;
 		//OnlyMoveConstructible v(2);
-		//sampler.addElement(4, v); // won't compile, no copy constructor
-		sampler.addElement(2, OnlyMoveConstructible(2));
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		//sampler.sampleElement(4, v); // won't compile, no copy constructor
+		sampler.sampleElement(2, OnlyMoveConstructible(2));
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 
 		ReservoirSamplerWeightedStatic<OnlyMoveConstructible, 2> samplerMovedTo(std::move(sampler));
 		(void)samplerMovedTo;
@@ -608,10 +630,10 @@ TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentTypes_ConstructedFille
 	{
 		ReservoirSamplerWeightedStatic<OnlyMoveAssignable, 2> sampler;
 		//OnlyMoveAssignable v(2);
-		//sampler.addElement(4, v); // won't compile, no copy constructor
-		//sampler.addElement(2, OnlyMoveAssignable(2)); // won't compile, should be copy or move constructible
-		sampler.emplaceElement(1, 2);
-		//sampler.addElement(3, 2); // won't compile, explicit constructor
+		//sampler.sampleElement(4, v); // won't compile, no copy constructor
+		//sampler.sampleElement(2, OnlyMoveAssignable(2)); // won't compile, should be copy or move constructible
+		sampler.sampleElementEmplace(1, 2);
+		//sampler.sampleElement(3, 2); // won't compile, explicit constructor
 	}
 }
 
@@ -629,7 +651,7 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_ConstructedFilledAndConsumed_Produc
 
 	for (size_t n = 0; n < streamSize; ++n)
 	{
-		sampler.emplaceElement(1.0f);
+		sampler.sampleElementEmplace(1.0f);
 	}
 
 	const int constructionsCount = CopyMoveCounter::GetConstructionsCount();

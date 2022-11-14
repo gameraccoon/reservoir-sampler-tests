@@ -45,7 +45,8 @@ void TestInfoLogger::OnTestStart(const TestInfo& /*test_info*/)
 // Called after a failed assertion or a SUCCEED() invocation.
 void TestInfoLogger::OnTestPartResult(const TestPartResult& test_part_result)
 {
-	if (test_part_result.failed()) {
+	if (test_part_result.failed())
+	{
 //		std::cerr << "======= " << (test_part_result.failed() ? " Failure in " : " Success in ")
 //			<< test_part_result.file_name() << ":" << test_part_result.line_number() << " " << test_part_result.summary()
 //			<< std::endl;
