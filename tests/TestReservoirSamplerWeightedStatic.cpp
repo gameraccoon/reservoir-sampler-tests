@@ -132,6 +132,55 @@ TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_FiveElementsAdded_HasOnly
 	}
 }
 
+TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_ConsumeResultTo_ConsumedResultIsCorrect)
+{
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
+	for (const size_t value : stream)
+	{
+		sampler.sampleElement(1.0f, value);
+	}
+
+	// we can move data into an existing C-array
+	size_t result[5];
+	const size_t resultSize = sampler.getResultSize();
+	ASSERT_EQ(static_cast<size_t>(5), resultSize);
+	sampler.consumeResultTo(result);
+	std::sort(result, result + resultSize);
+	EXPECT_EQ(stream[0], result[0]);
+	EXPECT_EQ(stream[1], result[1]);
+	EXPECT_EQ(stream[2], result[2]);
+	EXPECT_EQ(stream[3], result[3]);
+	EXPECT_EQ(stream[4], result[4]);
+}
+
+TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_ConsumeResultTo_SamplerCanBeReused)
+{
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
+	for (const size_t value : stream)
+	{
+		sampler.sampleElement(1.0f, value);
+	}
+
+	{
+		size_t result[5];
+		sampler.consumeResultTo(result);
+	}
+
+	EXPECT_EQ(static_cast<size_t>(0), sampler.getResultSize());
+	for (const size_t value : stream)
+	{
+		sampler.sampleElement(1.0f, value);
+	}
+
+	std::vector<size_t> result = sampler.consumeResult();
+	std::sort(result.begin(), result.end());
+	EXPECT_EQ(stream, result);
+}
+
 TEST(ReservoirSamplerWeightedStatic, SamplerOfSizeFive_ThreeElementsAdded_HasOnlyOriginalElements)
 {
 	const std::vector<size_t> stream({10, 11, 12});
