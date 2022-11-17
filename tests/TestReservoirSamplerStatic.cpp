@@ -356,6 +356,110 @@ TEST(ReservoirSamplerStatic, Sampler_Moved_OldSamplerCanBeReused)
 	}
 }
 
+TEST(ReservoirSamplerStatic, EmptySampler_CopyAssigned_DoesNotCrash)
+{
+	ReservoirSamplerStatic<size_t, 5> sampler;
+	ReservoirSamplerStatic<size_t, 5> sampler2;
+	sampler = sampler2;
+}
+
+TEST(ReservoirSamplerStatic, Sampler_CopyAssigned_HoldsTheData)
+{
+	const std::vector<size_t> streamOld({20, 21, 22, 23, 24});
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+	ReservoirSamplerStatic<size_t, 5> sampler1;
+	ReservoirSamplerStatic<size_t, 5> sampler2;
+
+	for (const size_t value : streamOld)
+	{
+		sampler1.sampleElement(value);
+	}
+
+	for (const size_t value : stream)
+	{
+		sampler2.sampleElement(value);
+	}
+
+	sampler1 = sampler2;
+
+	{
+		std::vector<size_t> result = sampler1.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream);
+	}
+
+	{
+		std::vector<size_t> result = sampler2.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream);
+	}
+}
+
+TEST(ReservoirSamplerStatic, EmptySampler_MoveAssigned_DoesNotCrash)
+{
+	ReservoirSamplerStatic<size_t, 5> sampler;
+	ReservoirSamplerStatic<size_t, 5> sampler2;
+	sampler = std::move(sampler2);
+}
+
+TEST(ReservoirSamplerStatic, Sampler_MoveAssigned_ValueIsMoved)
+{
+	const std::vector<size_t> streamOld({20, 21, 22, 23, 24});
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+	ReservoirSamplerStatic<size_t, 5> sampler1;
+	ReservoirSamplerStatic<size_t, 5> sampler2;
+
+	for (const size_t value : streamOld)
+	{
+		sampler1.sampleElement(value);
+	}
+
+	for (const size_t value : stream)
+	{
+		sampler2.sampleElement(value);
+	}
+
+	sampler1 = std::move(sampler2);
+
+	{
+		std::vector<size_t> result = sampler1.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream);
+	}
+}
+
+TEST(ReservoirSamplerStatic, Sampler_MoveAssigned_OldSamplerCanBeReused)
+{
+	const std::vector<size_t> streamOld({20, 21, 22, 23, 24});
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+	const std::vector<size_t> stream2({33, 34, 35, 36, 37});
+	ReservoirSamplerStatic<size_t, 5> sampler1;
+	ReservoirSamplerStatic<size_t, 5> sampler2;
+
+	for (const size_t value : streamOld)
+	{
+		sampler1.sampleElement(value);
+	}
+
+	for (const size_t value : stream)
+	{
+		sampler2.sampleElement(value);
+	}
+
+	sampler1 = std::move(sampler2);
+
+	for (const size_t value : stream2)
+	{
+		sampler2.sampleElement(value);
+	}
+
+	{
+		std::vector<size_t> result = sampler2.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream2);
+	}
+}
+
 TEST(ReservoirSamplerStatic, SamplerSizeOfFive_SamplingFromStreamOfTwenty_ProducesEqualFrequencies)
 {
 	std::array<int, 20> frequences{};

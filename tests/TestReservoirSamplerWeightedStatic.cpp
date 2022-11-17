@@ -356,6 +356,110 @@ TEST(ReservoirSamplerWeightedStatic, Sampler_Moved_OldSamplerCanBeReused)
 	}
 }
 
+TEST(ReservoirSamplerWeightedStatic, EmptySampler_CopyAssigned_DoesNotCrash)
+{
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler2;
+	sampler = sampler2;
+}
+
+TEST(ReservoirSamplerWeightedStatic, Sampler_CopyAssigned_HoldsTheData)
+{
+	const std::vector<size_t> streamOld({20, 21, 22, 23, 24});
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler1;
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler2;
+
+	for (const size_t value : streamOld)
+	{
+		sampler1.sampleElement(1.0f, value);
+	}
+
+	for (const size_t value : stream)
+	{
+		sampler2.sampleElement(1.0f, value);
+	}
+
+	sampler1 = sampler2;
+
+	{
+		std::vector<size_t> result = sampler1.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream);
+	}
+
+	{
+		std::vector<size_t> result = sampler2.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream);
+	}
+}
+
+TEST(ReservoirSamplerWeightedStatic, EmptySampler_MoveAssigned_DoesNotCrash)
+{
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler;
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler2;
+	sampler = std::move(sampler2);
+}
+
+TEST(ReservoirSamplerWeightedStatic, Sampler_MoveAssigned_ValueIsMoved)
+{
+	const std::vector<size_t> streamOld({20, 21, 22, 23, 24});
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler1;
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler2;
+
+	for (const size_t value : streamOld)
+	{
+		sampler1.sampleElement(1.0f, value);
+	}
+
+	for (const size_t value : stream)
+	{
+		sampler2.sampleElement(1.0f, value);
+	}
+
+	sampler1 = std::move(sampler2);
+
+	{
+		std::vector<size_t> result = sampler1.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream);
+	}
+}
+
+TEST(ReservoirSamplerWeightedStatic, Sampler_MoveAssigned_OldSamplerCanBeReused)
+{
+	const std::vector<size_t> streamOld({20, 21, 22, 23, 24});
+	const std::vector<size_t> stream({10, 11, 12, 13, 14});
+	const std::vector<size_t> stream2({33, 34, 35, 36, 37});
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler1;
+	ReservoirSamplerWeightedStatic<size_t, 5> sampler2;
+
+	for (const size_t value : streamOld)
+	{
+		sampler1.sampleElement(1.0f, value);
+	}
+
+	for (const size_t value : stream)
+	{
+		sampler2.sampleElement(1.0f, value);
+	}
+
+	sampler1 = std::move(sampler2);
+
+	for (const size_t value : stream2)
+	{
+		sampler2.sampleElement(1.0f, value);
+	}
+
+	{
+		std::vector<size_t> result = sampler2.consumeResult();
+		std::sort(result.begin(), result.end());
+		EXPECT_EQ(result, stream2);
+	}
+}
+
 TEST(ReservoirSamplerWeightedStatic, SamplersWithDifferentWeightTypes_FilledWithData_ProduceExpectedResults)
 {
 	{
