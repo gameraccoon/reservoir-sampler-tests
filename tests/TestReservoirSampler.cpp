@@ -655,8 +655,10 @@ TEST(ReservoirSampler, Sampler_ConstructedFilledAndConsumed_ProducesReasonableAm
 	EXPECT_EQ(0, CopyMoveCounter::GetCopiesCount());
 	EXPECT_EQ(static_cast<int>(sampleSize), constructionsCount - movesCount);
 
-	auto result = sampler.getResult();
-	(void)result;
+	{
+		auto result = sampler.getResult();
+		(void)result;
+	}
 
 	EXPECT_EQ(constructionsCount, CopyMoveCounter::GetConstructionsCount());
 	EXPECT_EQ(0, CopyMoveCounter::GetCopiesCount());
