@@ -367,7 +367,10 @@ TEST(ReservoirSamplerLinear, Sampler_SamplingFromStreamOfWeightedValues_Produces
 
 		const auto result = samplerMoved.getResult();
 		ASSERT_TRUE(result.has_value());
+#pragma GCC diagnostic push // GCC 11 complains about this line and it doesn't make sense, ignore
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		++frequences[*result];
+#pragma GCC diagnostic pop
 	}
 
 	const float frequencySum = std::accumulate(frequences.begin(), frequences.end(), 0.0f);
